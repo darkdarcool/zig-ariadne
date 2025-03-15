@@ -35,26 +35,15 @@ pub fn main() !void {
 
     mAriadne.addSourceFile(file_name, source);
 
-    var labels = std.ArrayList(ariadne.Label).init(alloc);
-    defer labels.deinit();
-
-    try labels.append(mAriadne.createLabel(file_name, .{
-        .start = 1,
-        .end = 5,
-    }, ariadne.COLORS.BLUE, @ptrCast(@constCast("Pls fix code :)"))));
-
-    try labels.append(mAriadne.createLabel(file_name, .{
+    var diagnostic = ariadne.Diagnostic.init(alloc, .Error, file_name, 5, @ptrCast(@constCast("Looks like there was an err!")));
+    var label = ariadne.Label.create(file_name, .{
         .start = 7,
         .end = 8,
-    }, ariadne.COLORS.RED, @ptrCast(@constCast("Now just delete this code"))));
+    }, ariadne.COLORS.RED, @ptrCast(@constCast("Now just delete this code")));
 
-    const diagnostic = ariadne.Diagnostic{
-        .message = @ptrCast(@constCast("Looks like there was an err!")),
-        .error_code = 5,
-        .file_id = file_name,
-        .kind = .Error,
-        .labels = labels.items,
-    };
+    try diagnostic.addLabel(&label);
 
-    try mAriadne.printDiagnostic(diagnostic);
+    defer diagnostic.deinit();
+
+    try mAriadne.printDiagnostic(&diagnostic);
 }

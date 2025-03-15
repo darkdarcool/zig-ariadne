@@ -1,5 +1,5 @@
 .{
-    .name = "zig-ariadne",
+    .name = .zig_ariadne,
     .version = "1.0.0",
     .dependencies = .{},
     .paths = .{
@@ -7,4 +7,5 @@
         "src",
         "build.zig.zon",
     },
+    .fingerprint = 0x1b1747e5aedafdd5,
 }
