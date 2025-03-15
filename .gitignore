@@ -1,0 +1,10 @@
+zig-out/
+.zig-cache/
+.env
+dev/
+notes/
+
+/target
+.ccls-cache/
+Cargo.lock
+src/ariadne_bridge.h

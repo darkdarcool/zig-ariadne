@@ -1,0 +1,10 @@
+.{
+    .name = "zig-ariadne",
+    .version = "1.0.0",
+    .dependencies = .{},
+    .paths = .{
+        "build.zig",
+        "src",
+        "build.zig.zon",
+    },
+}
