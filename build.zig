@@ -28,9 +28,6 @@ pub fn build(b: *std.Build) void {
     ariadne.step.dependOn(&build_rust.step);
     ariadne.step.dependOn(&build_c_header_file.step);
 
-    const check = b.step("check", "Check if ariadne compiles");
-    check.dependOn(&ariadne.step);
-
     const test_exe = b.addExecutable(.{
         .name = "ariadne-test",
         .root_source_file = b.path("src/test.zig"),
@@ -51,4 +48,7 @@ pub fn build(b: *std.Build) void {
 
     const run_step = b.step("run", "Run the tests for ariadne");
     run_step.dependOn(&run_cmd.step);
+
+    const check = b.step("check", "Check if ariadne compiles");
+    check.dependOn(&test_exe.step);
 }

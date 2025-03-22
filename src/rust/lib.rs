@@ -9,8 +9,15 @@ extern crate libc;
 pub mod interop;
 
 use interop::{
-    BasicDiagnostic, Label as CLabel, cstr_to_str, diag_kind_to_ariadne, label_color_to_ariadne,
+    BasicDiagnostic, Color2, Label as CLabel, cstr_to_str, diag_kind_to_ariadne,
+    label_color_to_ariadne,
 };
+
+#[unsafe(no_mangle)]
+pub extern "C" fn test_color(c: Color2) {
+    let ariadne_color: Color = c.into();
+    println!("{:#?}", ariadne_color);
+}
 
 #[unsafe(no_mangle)]
 pub extern "C" fn print_basic_diagnostic(
@@ -42,12 +49,12 @@ pub extern "C" fn print_basic_diagnostic(
     for label in labels.iter() {
         let text = cstr_to_str!(label.text);
         let label_file_name = cstr_to_str!(label.file_name);
-        let color = label_color_to_ariadne(label.color);
+        //let color = label_color_to_ariadne(label.color);
 
         report = report.with_label(
             Label::new((label_file_name, label.span.start..label.span.end))
                 .with_message(text)
-                .with_color(color),
+                .with_color(label.color.into()),
         );
     }
 

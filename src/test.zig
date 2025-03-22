@@ -35,15 +35,15 @@ pub fn main() !void {
 
     mAriadne.addSourceFile(file_name, source);
 
-    var diagnostic = ariadne.Diagnostic.init(alloc, .Error, file_name, 5, @ptrCast(@constCast("Looks like there was an err!")));
-    var label = ariadne.Label.create(file_name, .{
+    var diagnostic = ariadne.Diagnostic.init(alloc, file_name, .Advice, 5, @ptrCast(@constCast("Looks like there was an err!")));
+    defer diagnostic.deinit();
+
+    var label = ariadne.Label.init(file_name, .{
         .start = 7,
         .end = 8,
-    }, ariadne.COLORS.RED, @ptrCast(@constCast("Now just delete this code")));
+    }, .{ .term_color = .bright_red }, @ptrCast(@constCast("Now just delete this code")));
 
     try diagnostic.addLabel(&label);
-
-    defer diagnostic.deinit();
 
     try mAriadne.printDiagnostic(&diagnostic);
 }

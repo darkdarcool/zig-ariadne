@@ -8,6 +8,21 @@ const ArenaAllocator = std.heap.ArenaAllocator;
 
 const Self = @This();
 
+const Labels = std.ArrayList(c.Label);
+
+/// The kind of diagnostic being emitted
+///
+/// ```
+/// [05] Error: There was an error
+///      ^^^^^
+/// ```
+///
+/// The kind of diagnostic also changes its color:
+/// * `Error` is red
+/// * `Warning` is yellow
+/// * `Advice` is blue (Fixed 147)
+///
+/// See https://github.com/zesterer/ariadne/blob/3c723bf56468f0b30eab8335cd437597ae0648ad/src/lib.rs#L527-L535
 pub const DiagnosticKind = enum {
     Error,
     Warning,
@@ -29,12 +44,31 @@ parent_alloc: Allocator,
 
 kind: DiagnosticKind,
 file_id: []u8,
-//labels: []c.Label,
-labels: std.ArrayList(c.Label),
+labels: Labels,
 error_code: i32,
 message: []u8,
 
-pub fn init(_alloc: Allocator, kind: DiagnosticKind, file_id: []u8, error_code: i32, message: []u8) Self {
+// zig fmt: off
+
+/// Initialize a new diagnostic message
+///
+/// `file_id` is the EXACT identifier used in the cache 
+/// for the file being referenced
+///
+/// ```
+///      kind
+///       v
+/// [05] Error: There was an error
+///  ^            ^ 
+/// error_code  message
+/// ```
+pub fn init(
+    _alloc: Allocator, 
+    file_id: []u8,
+    kind: DiagnosticKind, 
+    error_code: i32, 
+    message: []u8
+) Self {
     var arena_allocator = _alloc.create(std.heap.ArenaAllocator) catch unreachable;
 
     arena_allocator.* = std.heap.ArenaAllocator.init(_alloc);
@@ -46,7 +80,7 @@ pub fn init(_alloc: Allocator, kind: DiagnosticKind, file_id: []u8, error_code: 
         .alloc = _a,
         .parent_alloc = _alloc,
 
-        .labels = std.ArrayList(c.Label).init(_a),
+        .labels = Labels.init(_a),
         .kind = kind,
         .file_id = file_id,
         .error_code = error_code,
@@ -54,11 +88,15 @@ pub fn init(_alloc: Allocator, kind: DiagnosticKind, file_id: []u8, error_code: 
     };
 }
 
+/// Adds a label to the diagnostic
 pub fn addLabel(self: *Self, label: *Label) !void {
     try self.labels.append(label.toC(self.alloc));
 }
 
-pub fn toC(self: *Self, cache: *Cache) !c.BasicDiagnostic {
+/// Do not call. Internal use only
+/// 
+/// Converts the diagnostic to FFI usable data structure
+pub fn toC(self: *Self, cache: *Cache) Cache.CacheError!c.BasicDiagnostic {
     const file_content = cache.getSourceFile(self.file_id) orelse return Cache.CacheError.SourceFileNotFound;
 
     // Null terminate all of our strings for c interop

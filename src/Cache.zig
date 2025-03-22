@@ -23,10 +23,17 @@ pub fn init(alloc: Allocator) Self {
     };
 }
 
-pub fn addSourceFile(self: *Self, file_name: []u8, file_content: []u8) void {
-    _ = self.files.put(file_name, file_content) catch unreachable;
+/// Add a source file to the cache
+///
+/// TODO: Add error handling
+pub fn addSourceFile(self: *Self, file_id: []u8, file_content: []u8) void {
+    _ = self.files.put(file_id, file_content) catch unreachable;
 }
 
-pub fn getSourceFile(self: *Self, file_name: []u8) ?[]u8 {
-    return self.files.get(file_name);
+/// Returns a source file from the cache
+///
+/// Returns null if there if the `file_id` does not exist
+/// in the cache
+pub fn getSourceFile(self: *Self, file_id: []u8) ?[]u8 {
+    return self.files.get(file_id);
 }
