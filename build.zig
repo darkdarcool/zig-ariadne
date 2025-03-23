@@ -39,6 +39,8 @@ pub fn build(b: *std.Build) void {
 
     test_exe.root_module.addImport("ariadne", ariadne.root_module);
 
+    b.installArtifact(ariadne);
+
     const run_cmd = b.addRunArtifact(test_exe);
     run_cmd.step.dependOn(b.getInstallStep());
 
