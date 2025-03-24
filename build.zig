@@ -12,7 +12,7 @@ pub fn build(b: *std.Build) !void {
     build_c_header_file.setCwd(b.path("./"));
 
     const ariadne_lib = b.addStaticLibrary(.{
-        .name = "ariadne",
+        .name = "ariadne_lib",
         .root_source_file = b.path("src/lib.zig"),
         .target = target,
         .optimize = optimize,
@@ -35,8 +35,13 @@ pub fn build(b: *std.Build) !void {
         .root_source_file = b.path("src/mod.zig"),
         .target = target,
         .optimize = optimize,
+        .imports = &.{
+            .{
+                .name = "ariadne_lib",
+                .module = ariadne_lib.root_module,
+            },
+        },
     });
-
     const test_exe = b.addExecutable(.{
         .name = "ariadne-test",
         .root_source_file = b.path("src/test.zig"),

@@ -1,2 +1,2 @@
-pub usingnamespace @import("ariadne");
+pub usingnamespace @import("ariadne_lib");
 
