@@ -31,7 +31,11 @@ pub fn build(b: *std.Build) !void {
     ariadne_lib.linkSystemLibrary("ariadne_bridge");
     ariadne_lib.addIncludePath(b.path("./"));
 
-    try b.modules.put(b.dupe("ariadne"), ariadne_lib.root_module);
+    _ = b.addModule("ariadne", .{
+        .root_source_file = b.path("src/mod.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
 
     const test_exe = b.addExecutable(.{
         .name = "ariadne-test",
