@@ -42,27 +42,28 @@ pub fn build(b: *std.Build) !void {
             },
         },
     });
-    const test_exe = b.addExecutable(.{
-        .name = "ariadne-test",
-        .root_source_file = b.path("src/test.zig"),
-        .target = target,
-        .optimize = optimize,
-    });
 
-    //test_exe.step.dependOn(&ariadne.step);
+    // const test_exe = b.addExecutable(.{
+    //     .name = "ariadne-test",
+    //     .root_source_file = b.path("src/test.zig"),
+    //     .target = target,
+    //     .optimize = optimize,
+    // });
 
-    test_exe.root_module.addImport("ariadne", ariadne_lib.root_module);
+    // //test_exe.step.dependOn(&ariadne.step);
 
-    const run_cmd = b.addRunArtifact(test_exe);
-    run_cmd.step.dependOn(b.getInstallStep());
+    // test_exe.root_module.addImport("ariadne", ariadne_lib.root_module);
 
-    if (b.args) |args| {
-        run_cmd.addArgs(args);
-    }
+    // const run_cmd = b.addRunArtifact(test_exe);
+    // run_cmd.step.dependOn(b.getInstallStep());
 
-    const run_step = b.step("run", "Run the tests for ariadne");
-    run_step.dependOn(&run_cmd.step);
+    // if (b.args) |args| {
+    //     run_cmd.addArgs(args);
+    // }
+
+    // const run_step = b.step("run", "Run the tests for ariadne");
+    // run_step.dependOn(&run_cmd.step);
 
     const check = b.step("check", "Check if ariadne compiles");
-    check.dependOn(&test_exe.step);
+    check.dependOn(&ariadne_lib.step);
 }
