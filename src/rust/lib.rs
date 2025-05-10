@@ -19,6 +19,7 @@ pub extern "C" fn test_color(c: Color2) {
     println!("{:#?}", ariadne_color);
 }
 
+/// Print a basic diagnostic
 #[unsafe(no_mangle)]
 pub extern "C" fn print_basic_diagnostic(
     //file_name: *const libc::c_char,

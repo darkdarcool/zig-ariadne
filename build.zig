@@ -11,17 +11,19 @@ pub fn build(b: *std.Build) !void {
     const build_c_header_file = b.addSystemCommand(&.{ "cbindgen", "--crate", "ariadne_bridge", "--output", "src/ariadne_bridge.h" });
     build_c_header_file.setCwd(b.path("./"));
 
-    const ariadne_lib = b.addStaticLibrary(.{
-        .name = "ariadne_lib",
+    const ariadne = b.addModule("ariadne", .{
         .root_source_file = b.path("src/lib.zig"),
         .target = target,
         .optimize = optimize,
-        //.root_module = ariadne,
+        .link_libc = true,
     });
 
-    // b.addModule("hello", .{});
+    const ariadne_lib = b.addLibrary(.{
+        .root_module = ariadne,
+        .name = "ariadne_lib",
+        .linkage = .static,
+    });
 
-    ariadne_lib.linkLibrary(ariadne_lib);
     ariadne_lib.step.dependOn(&build_rust.step);
     ariadne_lib.step.dependOn(&build_c_header_file.step);
 
@@ -31,39 +33,28 @@ pub fn build(b: *std.Build) !void {
     ariadne_lib.linkSystemLibrary("ariadne_bridge");
     ariadne_lib.addIncludePath(b.path("./"));
 
-    _ = b.addModule("ariadne", .{
-        .root_source_file = b.path("src/mod.zig"),
+    const test_exe = b.addExecutable(.{
+        .name = "ariadne-test",
+        .root_source_file = b.path("src/test.zig"),
         .target = target,
         .optimize = optimize,
-        .imports = &.{
-            .{
-                .name = "ariadne_lib",
-                .module = ariadne_lib.root_module,
-            },
-        },
     });
 
-    // const test_exe = b.addExecutable(.{
-    //     .name = "ariadne-test",
-    //     .root_source_file = b.path("src/test.zig"),
-    //     .target = target,
-    //     .optimize = optimize,
-    // });
+    //test_exe.step.dependOn(&ariadne.step);
 
-    // //test_exe.step.dependOn(&ariadne.step);
+    test_exe.root_module.addImport("ariadne", ariadne_lib.root_module);
+    test_exe.step.dependOn(&ariadne_lib.step);
 
-    // test_exe.root_module.addImport("ariadne", ariadne_lib.root_module);
+    const run_cmd = b.addRunArtifact(test_exe);
+    run_cmd.step.dependOn(b.getInstallStep());
 
-    // const run_cmd = b.addRunArtifact(test_exe);
-    // run_cmd.step.dependOn(b.getInstallStep());
+    if (b.args) |args| {
+        run_cmd.addArgs(args);
+    }
 
-    // if (b.args) |args| {
-    //     run_cmd.addArgs(args);
-    // }
+    const run_step = b.step("run", "Run the tests for ariadne");
+    run_step.dependOn(&run_cmd.step);
 
-    // const run_step = b.step("run", "Run the tests for ariadne");
-    // run_step.dependOn(&run_cmd.step);
-
-    const check = b.step("check", "Check if ariadne compiles");
+    const check = b.step("check", "Check if zig-ariadne compiles");
     check.dependOn(&ariadne_lib.step);
 }
