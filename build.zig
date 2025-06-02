@@ -1,37 +1,56 @@
 const std = @import("std");
+const build_crab = @import("build_crab");
 
 pub fn build(b: *std.Build) !void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
-
-    const build_rust = b.addSystemCommand(&.{ "cargo", "build", "--release" });
-    const path_to_lib = b.path("./target/release/");
-
-    // Command for generating c header file for zig bindings
-    const build_c_header_file = b.addSystemCommand(&.{ "cbindgen", "--crate", "ariadne_bridge", "--output", "src/ariadne_bridge.h" });
-    build_c_header_file.setCwd(b.path("./"));
 
     const ariadne = b.addModule("ariadne", .{
         .root_source_file = b.path("src/lib.zig"),
         .target = target,
         .optimize = optimize,
         .link_libc = true,
+        //.link_libcpp = true,
     });
 
-    const ariadne_lib = b.addLibrary(.{
-        .root_module = ariadne,
-        .name = "ariadne_lib",
-        .linkage = .static,
+    // Build our rust code
+    const crate_artifacts = build_crab.addCargoBuild(
+        b,
+        .{
+            //.name = "ariadne_bridge",
+            .manifest_path = b.path("Cargo.toml"),
+            .cargo_args = &.{
+                "--release",
+                "--quiet",
+            },
+        },
+        .{
+            .optimize = .ReleaseSafe,
+            .target = target,
+            //.optimize = optimize,
+        },
+    );
+
+    // It might be better zig practice to remove this command from the "install" step and
+    // have a separate step for it. This is because a package dependant on this one doesn't
+    // need to generate the header file over and over again, it can be done before release
+    // and commited to Git on a normal basis
+    const bindings_gen = b.addSystemCommand(&.{
+        "cbindgen",
+        "--crate",
+        "ariadne_bridge",
+        "--output",
+        "src/ariadne_bridge.h",
     });
+    b.getInstallStep().dependOn(&bindings_gen.step);
 
-    ariadne_lib.step.dependOn(&build_rust.step);
-    ariadne_lib.step.dependOn(&build_c_header_file.step);
-
-    // Bunch of fun function calls for making and c and zig play nice
-    ariadne_lib.addIncludePath(b.path("src/"));
-    ariadne_lib.addLibraryPath(path_to_lib);
-    ariadne_lib.linkSystemLibrary("ariadne_bridge");
-    ariadne_lib.addIncludePath(b.path("./"));
+    // Link all of the rust and ffi stuff
+    ariadne.addLibraryPath(crate_artifacts);
+    ariadne.linkSystemLibrary("ariadne_bridge", .{
+        .needed = true,
+        .preferred_link_mode = .static,
+    });
+    ariadne.addIncludePath(b.path("src"));
 
     const test_exe = b.addExecutable(.{
         .name = "ariadne-test",
@@ -40,10 +59,9 @@ pub fn build(b: *std.Build) !void {
         .optimize = optimize,
     });
 
-    //test_exe.step.dependOn(&ariadne.step);
+    b.installArtifact(test_exe);
 
-    test_exe.root_module.addImport("ariadne", ariadne_lib.root_module);
-    test_exe.step.dependOn(&ariadne_lib.step);
+    test_exe.root_module.addImport("ariadne", ariadne);
 
     const run_cmd = b.addRunArtifact(test_exe);
     run_cmd.step.dependOn(b.getInstallStep());
@@ -54,7 +72,8 @@ pub fn build(b: *std.Build) !void {
 
     const run_step = b.step("run", "Run the tests for ariadne");
     run_step.dependOn(&run_cmd.step);
+    //run_step.dependOn(&
 
     const check = b.step("check", "Check if zig-ariadne compiles");
-    check.dependOn(&ariadne_lib.step);
+    check.dependOn(&test_exe.step);
 }

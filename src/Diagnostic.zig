@@ -119,6 +119,7 @@ pub fn toC(self: *Self, cache: *Cache) Cache.CacheError!c.BasicDiagnostic {
 }
 
 pub fn deinit(self: *Self) void {
+    self.labels.deinit();
     self.arena.deinit();
     self.parent_alloc.destroy(self.arena);
 }

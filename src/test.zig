@@ -41,7 +41,7 @@ pub fn main() !void {
     var label = ariadne.Label.init(file_name, .{
         .start = 7,
         .end = 8,
-    }, .{ .term_color = .bright_red }, @ptrCast(@constCast("Now just delete this code")));
+    }, .{ .term_color = .yellow }, @ptrCast(@constCast("Now just delete this code")));
 
     try diagnostic.addLabel(&label);
 

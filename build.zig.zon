@@ -1,7 +1,12 @@
 .{
     .name = .zig_ariadne,
     .version = "1.0.0",
-    .dependencies = .{},
+    .dependencies = .{
+        .build_crab = .{
+            .url = "git+https://github.com/akarpovskii/build.crab#024fac10c475235e80f4b8fb172e39fc20a15a9d",
+            .hash = "build_crab-0.2.0-V2z3N8C7AABofsXwDYy-nHg6rrXngQjOs8J4LGlqIcew",
+        },
+    },
     .paths = .{
         "build.zig",
         "src",

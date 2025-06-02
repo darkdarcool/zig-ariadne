@@ -37,3 +37,7 @@ pub fn addSourceFile(self: *Self, file_id: []u8, file_content: []u8) void {
 pub fn getSourceFile(self: *Self, file_id: []u8) ?[]u8 {
     return self.files.get(file_id);
 }
+
+pub fn deinit(self: *Self) void {
+    self.files.deinit();
+}

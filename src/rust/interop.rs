@@ -31,7 +31,6 @@ pub struct Color {
 #[repr(C)]
 pub enum Color2 {
     Primary,
-    Fixed(u8),
     Rgb(u8, u8, u8),
     Black,
     Red,
@@ -55,7 +54,6 @@ impl Into<ariadne::Color> for Color2 {
     fn into(self) -> ariadne::Color {
         return match self {
             Self::Primary => ariadne::Color::Primary,
-            Self::Fixed(c) => ariadne::Color::Fixed(c),
             Self::Rgb(r, g, b) => ariadne::Color::Rgb(r, g, b),
             Self::Black => ariadne::Color::Black,
             Self::Red => ariadne::Color::Red,

@@ -43,10 +43,23 @@ pub const Ariadne = struct {
 
     /// Print a basic diagnostic to stderr
     pub fn printDiagnostic(self: *Self, diagnostic: *Diagnostic) Cache.CacheError!void {
-        c.print_basic_diagnostic(try diagnostic.toC(&self.cache));
+        const c_diagnostic = try diagnostic.toC(&self.cache);
+        defer self.deinitDiagnostic(c_diagnostic);
+
+        c.print_basic_diagnostic(c_diagnostic);
+    }
+
+    fn deinitDiagnostic(self: *Self, c_diagnostic: c.BasicDiagnostic) void {
+        const file_content = std.mem.sliceTo(c_diagnostic.c_file_content, 0);
+        self.alloc.free(file_content);
+        const file_name = std.mem.sliceTo(c_diagnostic.c_file_name, 0);
+        self.alloc.free(file_name);
+        const message = std.mem.sliceTo(c_diagnostic.c_message, 0);
+        self.alloc.free(message);
     }
 
     pub fn deinit(self: *Self) void {
+        self.cache.deinit();
         self.arena.deinit();
         self.parent_alloc.destroy(self.arena);
     }
